@@ -20,6 +20,8 @@ import PostJob from './pages/PostJob';
 import Profile from './pages/Profile';
 import EditProfile from './pages/EditProfile';
 import AdminDashboard from './pages/AdminDashboard';
+import ScheduleInterview from './pages/ScheduleInterview';
+import InterviewDashboard from './pages/InterviewDashboard';
 
 function App() {
   return (
@@ -100,6 +102,22 @@ function App() {
                 element={
                   <PrivateRoute requiredRole="employer">
                     <PostJob />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/applications/:id/schedule"
+                element={
+                  <PrivateRoute requiredRole="employer">
+                    <ScheduleInterview />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/interviews"
+                element={
+                  <PrivateRoute requiredRole="employer">
+                    <InterviewDashboard />
                   </PrivateRoute>
                 }
               />

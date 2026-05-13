@@ -1,6 +1,67 @@
+const nodemailer = require('nodemailer');
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const User = require('../models/User');
+
+const createTransporter = () => {
+  return nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: process.env.SMTP_PORT,
+    secure: process.env.SMTP_PORT == 465,
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+};
+
+const sendInterviewNotification = async (application) => {
+  const email = application.email || application.applicant?.email;
+  const applicantName = application.fullName || application.applicant?.fullName || 'Applicant';
+  const jobTitle = application.job?.title || 'the job';
+
+  if (!email) {
+    console.warn('No applicant email available for interview notification');
+    return;
+  }
+
+  const interviewDate = application.interviewDate ? new Date(application.interviewDate).toLocaleDateString() : 'TBA';
+  const interviewTime = application.interviewTime || 'TBA';
+  const interviewMode = application.interviewMode || 'TBA';
+  const interviewLink = application.interviewLink || 'TBA';
+  const interviewNotes = application.interviewNotes || 'No additional notes.';
+
+  const message = `
+    <h1>Interview Scheduled</h1>
+    <p>Hi ${applicantName},</p>
+    <p>Your interview for <strong>${jobTitle}</strong> has been scheduled.</p>
+    <p><strong>Date:</strong> ${interviewDate}</p>
+    <p><strong>Time:</strong> ${interviewTime}</p>
+    <p><strong>Mode:</strong> ${interviewMode}</p>
+    <p><strong>Location / Link:</strong> ${interviewLink}</p>
+    <p><strong>Notes:</strong> ${interviewNotes}</p>
+    <p>Good luck!</p>
+    <br />
+    <p>Best regards,<br/>Job Portal Team</p>
+  `;
+
+  if (!process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASS) {
+    console.warn('SMTP credentials are not configured. Interview email content:', message);
+    return;
+  }
+
+  try {
+    const transporter = createTransporter();
+    await transporter.sendMail({
+      from: `"Job Portal" <${process.env.SMTP_USER}>`,
+      to: email,
+      subject: `Interview Scheduled for ${jobTitle}`,
+      html: message,
+    });
+  } catch (error) {
+    console.error('Interview email send error:', error.message || error);
+  }
+};
 
 // @desc    Apply for a job
 // @route   POST /api/applications
@@ -112,7 +173,34 @@ exports.getEmployerApplications = async (req, res, next) => {
       .populate('applicant', 'fullName email phone skills')
       .sort({ appliedAt: -1 });
 
-    // Filter out applications for other employers' jobs
+    const filteredApplications = applications.filter(app => app.job !== null);
+
+    res.status(200).json({
+      success: true,
+      count: filteredApplications.length,
+      data: filteredApplications
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+exports.getEmployerInterviews = async (req, res, next) => {
+  try {
+    const applications = await Application.find({
+      status: 'shortlisted',
+      interviewDate: { $exists: true, $ne: null }
+    })
+      .populate({
+        path: 'job',
+        match: { employer: req.user._id }
+      })
+      .populate('applicant', 'fullName email phone skills location')
+      .sort({ interviewDate: 1, interviewTime: 1 });
+
     const filteredApplications = applications.filter(app => app.job !== null);
 
     res.status(200).json({
@@ -172,12 +260,19 @@ exports.getJobApplications = async (req, res, next) => {
 // @access  Private (Employer only)
 exports.updateApplicationStatus = async (req, res, next) => {
   try {
-    const { status } = req.body;
+    const {
+      status,
+      interviewDate,
+      interviewTime,
+      interviewMode,
+      interviewLink,
+      interviewNotes
+    } = req.body;
 
-    if (!status) {
+    if (!status && !interviewDate && !interviewTime && !interviewMode && !interviewLink && !interviewNotes) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide status'
+        message: 'Please provide status or interview details'
       });
     }
 
@@ -198,8 +293,26 @@ exports.updateApplicationStatus = async (req, res, next) => {
       });
     }
 
-    application.status = status;
-    
+    if (status) {
+      application.status = status;
+    }
+
+    if (interviewDate) {
+      application.interviewDate = interviewDate;
+    }
+    if (interviewTime) {
+      application.interviewTime = interviewTime;
+    }
+    if (interviewMode) {
+      application.interviewMode = interviewMode;
+    }
+    if (interviewLink) {
+      application.interviewLink = interviewLink;
+    }
+    if (interviewNotes) {
+      application.interviewNotes = interviewNotes;
+    }
+
     if (status === 'reviewed') {
       application.reviewedAt = new Date();
     } else if (status === 'rejected') {
@@ -208,7 +321,15 @@ exports.updateApplicationStatus = async (req, res, next) => {
       application.acceptedAt = new Date();
     }
 
+    if (status === 'shortlisted' && (interviewDate || interviewTime || interviewLink || interviewMode || interviewNotes)) {
+      application.interviewScheduledAt = new Date();
+    }
+
     await application.save();
+
+    if (status === 'shortlisted') {
+      await sendInterviewNotification(application);
+    }
 
     res.status(200).json({
       success: true,

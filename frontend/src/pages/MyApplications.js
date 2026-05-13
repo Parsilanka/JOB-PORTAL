@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { applicationService } from '../services/api';
-import { useAuth } from '../context/AuthContext';
 import { FiBriefcase, FiClock, FiCheckCircle, FiXCircle } from 'react-icons/fi';
 
 const MyApplications = () => {
   const [applications, setApplications] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { user } = useAuth();
 
   useEffect(() => {
     fetchApplications();
@@ -107,6 +105,40 @@ const MyApplications = () => {
                   <div className="mt-4 p-4 bg-gray-50 rounded">
                     <p className="font-semibold text-gray-900 mb-2">Employer Comments</p>
                     <p className="text-gray-700">{app.comments}</p>
+                  </div>
+                )}
+
+                {(app.interviewDate || app.interviewLink || app.interviewNotes) && (
+                  <div className="mt-4 p-4 bg-blue-50 rounded">
+                    <h3 className="font-semibold text-gray-900 mb-3">Interview Details</h3>
+                    {app.interviewDate && (
+                      <p className="text-sm text-gray-700 mb-1">
+                        <span className="font-semibold">Date:</span> {new Date(app.interviewDate).toLocaleDateString()}
+                      </p>
+                    )}
+                    {app.interviewTime && (
+                      <p className="text-sm text-gray-700 mb-1">
+                        <span className="font-semibold">Time:</span> {app.interviewTime}
+                      </p>
+                    )}
+                    {app.interviewMode && (
+                      <p className="text-sm text-gray-700 mb-1">
+                        <span className="font-semibold">Mode:</span> {app.interviewMode}
+                      </p>
+                    )}
+                    {app.interviewLink && (
+                      <p className="text-sm text-gray-700 mb-1">
+                        <span className="font-semibold">Link:</span>{' '}
+                        <a href={app.interviewLink} target="_blank" rel="noreferrer" className="text-blue-600 hover:text-blue-800">
+                          {app.interviewLink}
+                        </a>
+                      </p>
+                    )}
+                    {app.interviewNotes && (
+                      <p className="text-sm text-gray-700">
+                        <span className="font-semibold">Notes:</span> {app.interviewNotes}
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

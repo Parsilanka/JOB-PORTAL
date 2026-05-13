@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { jobService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { FiBriefcase, FiMapPin, FiDollarSign, FiClock, FiChevronLeft } from 'react-icons/fi';
+import { FiMapPin, FiDollarSign, FiChevronLeft } from 'react-icons/fi';
 
 const JobDetail = () => {
   const { id } = useParams();
@@ -11,11 +11,7 @@ const JobDetail = () => {
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchJob();
-  }, [id]);
-
-  const fetchJob = async () => {
+  const fetchJob = useCallback(async () => {
     try {
       setLoading(true);
       const response = await jobService.getJob(id);
@@ -25,7 +21,11 @@ const JobDetail = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchJob();
+  }, [fetchJob]);
 
   const handleApply = async () => {
     if (!isAuthenticated) {

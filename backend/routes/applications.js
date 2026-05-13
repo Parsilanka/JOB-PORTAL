@@ -3,6 +3,7 @@ const {
   applyForJob,
   getSeekerApplications,
   getEmployerApplications,
+  getEmployerInterviews,
   getJobApplications,
   updateApplicationStatus,
   getApplication
@@ -17,6 +18,7 @@ router.get('/seeker/my', protect, isJobSeeker, getSeekerApplications);
 
 // Employer routes
 router.get('/employer/all', protect, isEmployer, getEmployerApplications);
+router.get('/employer/interviews', protect, isEmployer, getEmployerInterviews);
 router.get('/job/:jobId', protect, isEmployer, getJobApplications);
 router.put('/:id', protect, isEmployer, updateApplicationStatus);
 

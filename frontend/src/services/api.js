@@ -55,9 +55,16 @@ export const applicationService = {
   },
   getSeekerApplications: () => API.get('/applications/seeker/my'),
   getEmployerApplications: () => API.get('/applications/employer/all'),
+  getEmployerInterviews: () => API.get('/applications/employer/interviews'),
   getJobApplications: (jobId) => API.get(`/applications/job/${jobId}`),
   getApplication: (id) => API.get(`/applications/${id}`),
   updateApplicationStatus: (id, data) => API.put(`/applications/${id}`, data)
+};
+
+export const getResumeUrl = (resumePath) => {
+  if (!resumePath) return '';
+  if (resumePath.startsWith('http')) return resumePath;
+  return API.defaults.baseURL.replace(/\/api$/, '') + resumePath;
 };
 
 // ===== USER SERVICES =====

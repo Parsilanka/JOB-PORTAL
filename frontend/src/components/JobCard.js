@@ -1,5 +1,5 @@
 import React from 'react';
-import { FiBriefcase, FiMapPin, FiDollarSign, FiClock } from 'react-icons/fi';
+import { FiBriefcase, FiMapPin, FiDollarSign } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 
 const JobCard = ({ job }) => {

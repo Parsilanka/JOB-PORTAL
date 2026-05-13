@@ -31,6 +31,7 @@ const Navbar = () => {
                   <>
                     <Link to="/post-job" className="text-gray-700 hover:text-blue-600">Post Job</Link>
                     <Link to="/my-jobs" className="text-gray-700 hover:text-blue-600">My Jobs</Link>
+                    <Link to="/interviews" className="text-gray-700 hover:text-blue-600">Interviews</Link>
                   </>
                 )}
                 {user?.accountType === 'admin' && (
@@ -68,6 +69,22 @@ const Navbar = () => {
             <Link to="/" className="block py-2 text-gray-700">Home</Link>
             {isAuthenticated ? (
               <>
+                {user?.accountType === 'job_seeker' && (
+                  <>
+                    <Link to="/jobs" className="block py-2 text-gray-700">Browse Jobs</Link>
+                    <Link to="/applications" className="block py-2 text-gray-700">My Applications</Link>
+                  </>
+                )}
+                {user?.accountType === 'employer' && (
+                  <>
+                    <Link to="/post-job" className="block py-2 text-gray-700">Post Job</Link>
+                    <Link to="/my-jobs" className="block py-2 text-gray-700">My Jobs</Link>
+                    <Link to="/interviews" className="block py-2 text-gray-700">Interviews</Link>
+                  </>
+                )}
+                {user?.accountType === 'admin' && (
+                  <Link to="/admin" className="block py-2 text-gray-700">Admin Panel</Link>
+                )}
                 <Link to="/profile" className="block py-2 text-gray-700">Profile</Link>
                 <button
                   onClick={logout}

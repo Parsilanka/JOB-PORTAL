@@ -41,6 +41,20 @@ const applicationSchema = new mongoose.Schema(
       type: String,
       required: [true, 'Please upload a resume']
     },
+    paymentStatus: {
+      type: String,
+      enum: ['pending', 'completed', 'failed'],
+      default: 'pending'
+    },
+    paidAmount: {
+      type: Number,
+      default: 0
+    },
+    paidAt: Date,
+    paymentId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Payment'
+    },
     coverLetter: {
       type: String,
       default: ''

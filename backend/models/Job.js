@@ -68,6 +68,15 @@ const jobSchema = new mongoose.Schema(
       enum: ['active', 'inactive', 'filled', 'closed'],
       default: 'active'
     },
+    adminApproved: {
+      type: Boolean,
+      default: false
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    approvalNotes: String,
     viewCount: {
       type: Number,
       default: 0

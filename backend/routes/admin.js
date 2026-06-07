@@ -5,7 +5,11 @@ const {
   approveUser,
   deleteUser,
   getAllJobs,
-  updateJobStatus
+  updateJobStatus,
+  getPendingJobs,
+  approveJob,
+  controlUserFeatures,
+  getFinancialDashboard
 } = require('../controllers/adminController');
 const { protect, authorize, isAdmin } = require('../middleware/auth');
 
@@ -16,14 +20,18 @@ router.use(protect, isAdmin);
 
 // Stats and dashboard
 router.get('/stats', getDashboardStats);
+router.get('/finances', getFinancialDashboard);
 
 // User management
 router.get('/users', getAllUsers);
 router.put('/users/:id/approve', approveUser);
+router.put('/users/:id/features', controlUserFeatures);
 router.delete('/users/:id', deleteUser);
 
 // Job management
 router.get('/jobs', getAllJobs);
+router.get('/jobs/pending', getPendingJobs);
 router.put('/jobs/:id', updateJobStatus);
+router.put('/jobs/:id/approve', approveJob);
 
 module.exports = router;

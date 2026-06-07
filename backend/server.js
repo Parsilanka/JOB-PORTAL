@@ -18,6 +18,8 @@ const jobRoutes = require('./routes/jobs');
 const applicationRoutes = require('./routes/applications');
 const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
+const paymentRoutes = require('./routes/payments');
+const subscriptionRoutes = require('./routes/subscriptions');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -81,6 +83,8 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/applications', applicationRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/payments', paymentRoutes);
+app.use('/api/subscriptions', subscriptionRoutes);
 
 // ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => {

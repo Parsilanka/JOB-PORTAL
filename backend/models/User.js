@@ -80,6 +80,15 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true
     },
+    canPostJobs: {
+      type: Boolean,
+      default: true
+    },
+    canApplyJobs: {
+      type: Boolean,
+      default: true
+    },
+    allowedFeatures: [String],
     resetPasswordToken: String,
     resetPasswordExpire: Date,
     createdAt: {

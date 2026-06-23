@@ -83,3 +83,6 @@ exports.isAdmin = (req, res, next) => {
   }
   next();
 };
+
+// Alias for protect middleware
+exports.authenticate = exports.protect;

@@ -103,12 +103,11 @@ const ApplyJob = () => {
         applicationData.append('cv', formData.cv);
       }
 
-      await applicationService.applyForJob(applicationData);
-      setSuccess(true);
+      const response = await applicationService.applyForJob(applicationData);
+      const applicationId = response.data.data._id;
 
-      setTimeout(() => {
-        navigate('/applications');
-      }, 2000);
+      // Redirect to payment page
+      navigate(`/application-payment/${applicationId}`);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to submit application');
     } finally {

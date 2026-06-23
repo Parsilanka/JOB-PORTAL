@@ -51,11 +51,10 @@ const PostJob = () => {
         skills: formData.skills.split(',').map(s => s.trim()).filter(s => s)
       };
 
-      await jobService.createJob(data);
-      alert('Job posted successfully!');
-      navigate('/my-jobs');
+      // Redirect to payment page with job data
+      navigate('/job-posting-payment', { state: { jobData: data } });
     } catch (err) {
-      setError(err.response?.data?.message || 'Error posting job');
+      setError(err.response?.data?.message || 'Error processing job posting');
     } finally {
       setLoading(false);
     }

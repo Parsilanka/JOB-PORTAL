@@ -4,6 +4,7 @@ import { AuthProvider } from './context/AuthContext';
 import { PrivateRoute, PublicRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
+import ThemeInitializer from './components/ThemeInitializer';
 
 // Pages
 import Home from './pages/Home';
@@ -22,11 +23,22 @@ import EditProfile from './pages/EditProfile';
 import AdminDashboard from './pages/AdminDashboard';
 import ScheduleInterview from './pages/ScheduleInterview';
 import InterviewDashboard from './pages/InterviewDashboard';
+import AdminJobApproval from './pages/AdminJobApproval';
+import AdminFinancialDashboard from './pages/AdminFinancialDashboard';
+import SubscriptionPlans from './pages/SubscriptionPlans';
+import ApplicationPayment from './pages/ApplicationPayment';
+import JobPostingPayment from './pages/JobPostingPayment';
+import Messages from './pages/Messages';
+import Notifications from './pages/Notifications';
+import Recommendations from './pages/Recommendations';
+import Analytics from './pages/Analytics';
+import AdvancedSearch from './pages/AdvancedSearch';
 
 function App() {
   return (
     <Router>
       <AuthProvider>
+        <ThemeInitializer />
         <div className="flex flex-col min-h-screen">
           <Navbar />
           <main className="flex-grow">
@@ -146,6 +158,81 @@ function App() {
                 element={
                   <PrivateRoute requiredRole="admin">
                     <AdminDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/approve-jobs"
+                element={
+                  <PrivateRoute requiredRole="admin">
+                    <AdminJobApproval />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/finances"
+                element={
+                  <PrivateRoute requiredRole="admin">
+                    <AdminFinancialDashboard />
+                  </PrivateRoute>
+                }
+              />
+
+              {/* Public Subscription Routes */}
+              <Route path="/subscriptions" element={<SubscriptionPlans />} />
+
+              {/* New Features Routes */}
+              <Route
+                path="/messages"
+                element={
+                  <PrivateRoute>
+                    <Messages />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/notifications"
+                element={
+                  <PrivateRoute>
+                    <Notifications />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/recommendations"
+                element={
+                  <PrivateRoute requiredRole="job_seeker">
+                    <Recommendations />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/analytics"
+                element={
+                  <PrivateRoute>
+                    <Analytics />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/search"
+                element={<AdvancedSearch />}
+              />
+
+              {/* Protected Payment Routes */}
+              <Route
+                path="/application-payment/:applicationId"
+                element={
+                  <PrivateRoute requiredRole="job_seeker">
+                    <ApplicationPayment />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/job-posting-payment"
+                element={
+                  <PrivateRoute requiredRole="employer">
+                    <JobPostingPayment />
                   </PrivateRoute>
                 }
               />

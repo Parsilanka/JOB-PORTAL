@@ -29,9 +29,9 @@ router.put('/users/:id/features', controlUserFeatures);
 router.delete('/users/:id', deleteUser);
 
 // Job management
-router.get('/jobs', getAllJobs);
 router.get('/jobs/pending', getPendingJobs);
-router.put('/jobs/:id', updateJobStatus);
+router.get('/jobs', getAllJobs);
 router.put('/jobs/:id/approve', approveJob);
+router.put('/jobs/:id', updateJobStatus);
 
 module.exports = router;

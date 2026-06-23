@@ -92,6 +92,76 @@ exports.initiateApplicationPayment = async (req, res, next) => {
   }
 };
 
+// @desc    Initiate M-Pesa payment for job posting
+// @route   POST /api/payments/initiate-job-posting
+// @access  Private
+exports.initiateJobPostingPayment = async (req, res, next) => {
+  try {
+    const { phoneNumber } = req.body;
+
+    if (!phoneNumber) {
+      return res.status(400).json({
+        success: false,
+        message: 'Phone number required'
+      });
+    }
+
+    const amount = parseInt(process.env.JOB_POSTING_FEE) || 100; // Default 100 KES
+
+    // Create payment record
+    const payment = await Payment.create({
+      user: req.user._id,
+      transactionType: 'job_posting',
+      amount,
+      currency: 'KES',
+      paymentMethod: 'mpesa',
+      reference: 'job',
+      phoneNumber,
+      metadata: {
+        employerId: req.user._id
+      }
+    });
+
+    // Initiate STK push
+    const mpesaResponse = await mpesaService.initiateStkPush(
+      phoneNumber,
+      amount,
+      `JOB-${req.user._id}-${Date.now()}`,
+      'Job Posting Fee'
+    );
+
+    if (mpesaResponse.success) {
+      payment.mpesaTransactionId = mpesaResponse.checkoutRequestId;
+      await payment.save();
+
+      res.status(200).json({
+        success: true,
+        message: 'Payment initiated. Please enter your M-Pesa PIN',
+        data: {
+          paymentId: payment._id,
+          checkoutRequestId: mpesaResponse.checkoutRequestId,
+          amount,
+          phoneNumber
+        }
+      });
+    } else {
+      payment.status = 'failed';
+      payment.errorMessage = mpesaResponse.error;
+      await payment.save();
+
+      res.status(400).json({
+        success: false,
+        message: mpesaResponse.error || 'Failed to initiate payment'
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
 // @desc    Initiate M-Pesa payment for subscription
 // @route   POST /api/payments/initiate-subscription
 // @access  Private
@@ -256,6 +326,138 @@ exports.handleMpesaCallback = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Callback received'
+    });
+  }
+};
+
+// @desc    Complete a test payment (for development/testing only)
+// @route   POST /api/payments/:paymentId/complete-test
+// @access  Private
+exports.completeTestPayment = async (req, res, next) => {
+  try {
+    // Only allow in test mode
+    if (process.env.MPESA_TEST_MODE !== 'true') {
+      return res.status(403).json({
+        success: false,
+        message: 'This endpoint is only available in test mode'
+      });
+    }
+
+    const { paymentId } = req.params;
+    const payment = await Payment.findById(paymentId);
+
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment not found'
+      });
+    }
+
+    // Check if user owns this payment
+    if (payment.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to complete this payment'
+      });
+    }
+
+    // Mark payment as completed
+    payment.status = 'completed';
+    payment.mpesaReceiptNumber = 'TEST_' + Date.now();
+    payment.completedAt = new Date();
+    await payment.save();
+
+    // Process based on transaction type
+    if (payment.transactionType === 'job_application') {
+      const application = await Application.findById(payment.metadata.applicationId);
+      if (application) {
+        application.paymentStatus = 'completed';
+        application.paidAmount = payment.amount;
+        application.paidAt = new Date();
+        await application.save();
+      }
+    } else if (payment.transactionType === 'job_posting') {
+      // Job posting payment completed
+      // Job will be created by frontend
+    } else if (payment.transactionType === 'premium_subscription') {
+      const endDate = new Date();
+      endDate.setMonth(endDate.getMonth() + 1);
+
+      await Subscription.findOneAndUpdate(
+        { user: payment.user },
+        {
+          plan: payment.metadata.subscriptionPlan,
+          status: 'active',
+          startDate: new Date(),
+          endDate,
+          $push: {
+            paymentHistory: {
+              paymentId: payment._id,
+              amount: payment.amount,
+              paidAt: new Date(),
+              status: 'completed'
+            }
+          }
+        },
+        { upsert: true, new: true }
+      );
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'Test payment completed successfully',
+      data: {
+        paymentId: payment._id,
+        status: payment.status
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
+
+// @desc    Get payment status
+// @route   GET /api/payments/:paymentId/status
+// @access  Private
+exports.getPaymentStatus = async (req, res, next) => {
+  try {
+    const { paymentId } = req.params;
+
+    const payment = await Payment.findById(paymentId);
+    if (!payment) {
+      return res.status(404).json({
+        success: false,
+        message: 'Payment not found'
+      });
+    }
+
+    // Check if user owns this payment
+    if (payment.user.toString() !== req.user._id.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: 'Not authorized to view this payment'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: {
+        paymentId: payment._id,
+        status: payment.status,
+        amount: payment.amount,
+        transactionType: payment.transactionType,
+        completedAt: payment.completedAt,
+        mpesaReceiptNumber: payment.mpesaReceiptNumber,
+        errorMessage: payment.errorMessage
+      }
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message
     });
   }
 };

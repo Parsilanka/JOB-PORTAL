@@ -20,6 +20,11 @@ const userRoutes = require('./routes/users');
 const adminRoutes = require('./routes/admin');
 const paymentRoutes = require('./routes/payments');
 const subscriptionRoutes = require('./routes/subscriptions');
+const messageRoutes = require('./routes/messages');
+const reviewRoutes = require('./routes/reviews');
+const notificationRoutes = require('./routes/notifications');
+const recommendationRoutes = require('./routes/recommendations');
+const analyticsRoutes = require('./routes/analytics');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -31,7 +36,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 // CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
   credentials: true
 }));
 
@@ -85,6 +90,11 @@ app.use('/api/users', userRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/subscriptions', subscriptionRoutes);
+app.use('/api/messages', messageRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+app.use('/api/analytics', analyticsRoutes);
 
 // ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => {

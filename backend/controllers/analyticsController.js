@@ -59,7 +59,7 @@ exports.getDashboardMetrics = async (req, res) => {
       const applications = await Application.countDocuments({ applicant: userId });
       const successfulApplications = await Application.countDocuments({
         applicant: userId,
-        status: 'hired'
+        status: 'accepted'
       });
 
       metrics.stats = {
@@ -70,13 +70,18 @@ exports.getDashboardMetrics = async (req, res) => {
         averageResponseTime: analytics.jobSeeker.averageResponseTime
       };
     } else if (user.accountType === 'employer') {
-      const jobs = await Job.countDocuments({ postedBy: userId });
-      const applicationsReceived = await Application.countDocuments({ job: { $in: await Job.find({ postedBy: userId }).select('_id') } });
+      const jobs = await Job.find({ employer: userId }).select('_id');
+      const applicationsReceived = await Application.countDocuments({ job: { $in: jobs.map((job) => job._id) } });
+      const shortlistedApplications = await Application.countDocuments({
+        job: { $in: jobs.map((job) => job._id) },
+        status: 'shortlisted'
+      });
       const reviews = await Review.countDocuments({ targetUser: userId });
 
       metrics.stats = {
-        totalJobsPosted: jobs,
+        totalJobsPosted: jobs.length,
         totalApplicationsReceived: applicationsReceived,
+        shortlistedApplications,
         totalReviews: reviews,
         averageRating: analytics.employer.averageRating,
         profileViews: analytics.employer.profileViews
@@ -211,13 +216,13 @@ async function updateJobSeekerAnalytics(userId, analytics) {
 }
 
 async function updateEmployerAnalytics(userId, analytics) {
-  const jobs = await Job.find({ postedBy: userId });
+  const jobs = await Job.find({ employer: userId });
   const totalApplications = await Application.countDocuments({
     job: { $in: jobs.map(j => j._id) }
   });
   const hiredApplications = await Application.countDocuments({
     job: { $in: jobs.map(j => j._id) },
-    status: 'hired'
+    status: 'accepted'
   });
 
   const reviews = await Review.find({ targetUser: userId, reviewType: 'employer' });

@@ -25,6 +25,8 @@ const reviewRoutes = require('./routes/reviews');
 const notificationRoutes = require('./routes/notifications');
 const recommendationRoutes = require('./routes/recommendations');
 const analyticsRoutes = require('./routes/analytics');
+const savedJobRoutes = require('./routes/savedJobs');
+const badgeRoutes = require('./routes/badges');
 const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
@@ -95,6 +97,8 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/saved-jobs', savedJobRoutes);
+app.use('/api/badges', badgeRoutes);
 
 // ===== HEALTH CHECK =====
 app.get('/api/health', (req, res) => {

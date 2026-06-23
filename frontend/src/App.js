@@ -5,6 +5,7 @@ import { PrivateRoute, PublicRoute } from './components/ProtectedRoute';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ThemeInitializer from './components/ThemeInitializer';
+import Chatbot from './components/Chatbot';
 
 // Pages
 import Home from './pages/Home';
@@ -33,6 +34,10 @@ import Notifications from './pages/Notifications';
 import Recommendations from './pages/Recommendations';
 import Analytics from './pages/Analytics';
 import AdvancedSearch from './pages/AdvancedSearch';
+import SavedJobs from './pages/SavedJobs';
+import HiringPipeline from './pages/HiringPipeline';
+import RecruiterInbox from './pages/RecruiterInbox';
+import InterviewCalendar from './pages/InterviewCalendar';
 
 function App() {
   return (
@@ -133,6 +138,30 @@ function App() {
                   </PrivateRoute>
                 }
               />
+              <Route
+                path="/hiring-pipeline"
+                element={
+                  <PrivateRoute requiredRole="employer">
+                    <HiringPipeline />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/recruiter-inbox"
+                element={
+                  <PrivateRoute requiredRole="employer">
+                    <RecruiterInbox />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/interview-calendar"
+                element={
+                  <PrivateRoute requiredRole="employer">
+                    <InterviewCalendar />
+                  </PrivateRoute>
+                }
+              />
 
               {/* Protected User Routes */}
               <Route
@@ -191,6 +220,14 @@ function App() {
                 }
               />
               <Route
+                path="/saved-jobs"
+                element={
+                  <PrivateRoute>
+                    <SavedJobs />
+                  </PrivateRoute>
+                }
+              />
+              <Route
                 path="/notifications"
                 element={
                   <PrivateRoute>
@@ -239,6 +276,7 @@ function App() {
             </Routes>
           </main>
           <Footer />
+          <Chatbot />
         </div>
       </AuthProvider>
     </Router>

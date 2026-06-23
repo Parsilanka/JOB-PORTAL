@@ -1,22 +1,20 @@
 const JobRecommendation = require('../models/JobRecommendation');
 const Job = require('../models/Job');
 const User = require('../models/User');
-const Application = require('../models/Application');
 const Notification = require('../models/Notification');
 
-// Get job recommendations for a user
 exports.getRecommendations = async (req, res) => {
   try {
     const userId = req.user.id;
     const { limit = 10, offset = 0 } = req.query;
 
-    const recommendations = await JobRecommendation.find({ jobSeeker: userId })
-      .populate('job')
+    const recommendations = await JobRecommendation.find({ jobSeeker: userId, isDismissed: false })
+      .populate('job', 'title location salary category skills jobType employer')
       .sort({ matchScore: -1, createdAt: -1 })
       .skip(parseInt(offset))
       .limit(parseInt(limit));
 
-    const total = await JobRecommendation.countDocuments({ jobSeeker: userId });
+    const total = await JobRecommendation.countDocuments({ jobSeeker: userId, isDismissed: false });
 
     res.status(200).json({
       success: true,
@@ -28,7 +26,6 @@ exports.getRecommendations = async (req, res) => {
   }
 };
 
-// Generate recommendations for a user (should be called periodically or on demand)
 exports.generateRecommendations = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -38,64 +35,64 @@ exports.generateRecommendations = async (req, res) => {
       return res.status(400).json({ message: 'Invalid user type' });
     }
 
-    // Get user's skills and preferences
-    const userSkills = user.skills || [];
-    const userLocation = user.location;
+    const userSkills = (user.skills || []).map((skill) => skill.toLowerCase());
+    const userLocation = (user.location || '').toLowerCase();
+    const userExperience = Array.isArray(user.experience) ? user.experience.length : Number(user.experience) || 0;
     const salaryExpectation = user.salaryExpectation || {};
 
-    // Find jobs that match user profile
-    const matchingJobs = await Job.find({
-      status: 'active',
-      location: { $regex: userLocation, $options: 'i' }
-    });
-
-    // Clear existing recommendations for this user
-    await JobRecommendation.deleteMany({ jobSeeker: userId });
-
-    // Generate new recommendations
-    const recommendations = [];
-    for (const job of matchingJobs) {
-      const matchScore = calculateMatchScore(user, job);
-
-      if (matchScore > 30) {
-        // Only create recommendations with match score > 30
-        const recommendation = new JobRecommendation({
-          jobSeeker: userId,
-          job: job._id,
-          matchScore,
-          matchReason: {
-            skillMatch: calculateSkillMatch(userSkills, job.skills || []),
-            experienceMatch: calculateExperienceMatch(user.experience || 0, job.experience || 0),
-            locationMatch: 100, // Already filtered by location
-            salaryExpectationMatch: calculateSalaryMatch(salaryExpectation, job.salary)
-          }
-        });
-        recommendations.push(recommendation);
-      }
+    const baseQuery = { status: 'active' };
+    if (userLocation) {
+      baseQuery.location = { $regex: userLocation, $options: 'i' };
     }
 
-    await JobRecommendation.insertMany(recommendations);
+    const matchingJobs = await Job.find(baseQuery)
+      .populate('employer', 'fullName companyName')
+      .sort({ createdAt: -1 });
 
-    // Create notification
-    await Notification.create({
-      user: userId,
-      type: 'job_recommendation',
-      title: `We found ${recommendations.length} jobs matching your profile`,
-      description: 'Check out our latest recommendations',
-      actionUrl: '/recommendations'
-    });
+    await JobRecommendation.deleteMany({ jobSeeker: userId });
+
+    const recommendations = [];
+    for (const job of matchingJobs) {
+      const matchScore = calculateMatchScore(userSkills, userExperience, salaryExpectation, job);
+      if (matchScore < 35) continue;
+
+      recommendations.push({
+        jobSeeker: userId,
+        job: job._id,
+        matchScore,
+        matchReason: {
+          skillMatch: calculateSkillMatch(userSkills, (job.skills || []).map((skill) => skill.toLowerCase())),
+          experienceMatch: calculateExperienceMatch(userExperience, job.experienceLevel),
+          locationMatch: calculateLocationMatch(userLocation, (job.location || '').toLowerCase()),
+          salaryExpectationMatch: calculateSalaryMatch(salaryExpectation, job.salary || {})
+        }
+      });
+    }
+
+    recommendations.sort((a, b) => b.matchScore - a.matchScore);
+    const topRecommendations = recommendations.slice(0, 10);
+
+    if (topRecommendations.length > 0) {
+      await JobRecommendation.insertMany(topRecommendations);
+      await Notification.create({
+        user: userId,
+        type: 'job_recommendation',
+        title: `We found ${topRecommendations.length} smart matches for you`,
+        description: 'Your AI-powered recommendations are ready.',
+        actionUrl: '/recommendations'
+      });
+    }
 
     res.status(200).json({
       success: true,
-      message: `Generated ${recommendations.length} recommendations`,
-      data: recommendations.slice(0, 10)
+      message: `Generated ${topRecommendations.length} recommendations`,
+      data: topRecommendations
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Mark job as viewed
 exports.markAsViewed = async (req, res) => {
   try {
     const { recommendationId } = req.params;
@@ -114,16 +111,12 @@ exports.markAsViewed = async (req, res) => {
     recommendation.viewedAt = new Date();
     await recommendation.save();
 
-    res.status(200).json({
-      success: true,
-      data: recommendation
-    });
+    res.status(200).json({ success: true, data: recommendation });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Save job recommendation
 exports.saveRecommendation = async (req, res) => {
   try {
     const { recommendationId } = req.params;
@@ -151,7 +144,6 @@ exports.saveRecommendation = async (req, res) => {
   }
 };
 
-// Dismiss recommendation
 exports.dismissRecommendation = async (req, res) => {
   try {
     const { recommendationId } = req.params;
@@ -169,58 +161,51 @@ exports.dismissRecommendation = async (req, res) => {
     recommendation.isDismissed = true;
     await recommendation.save();
 
-    res.status(200).json({
-      success: true,
-      message: 'Recommendation dismissed',
-      data: recommendation
-    });
+    res.status(200).json({ success: true, message: 'Recommendation dismissed', data: recommendation });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
-// Helper functions
-function calculateMatchScore(user, job) {
-  let score = 0;
-  
-  const skillMatch = calculateSkillMatch(user.skills || [], job.skills || []);
-  const experienceMatch = calculateExperienceMatch(user.experience || 0, job.experience || 0);
-  const salaryMatch = calculateSalaryMatch(user.salaryExpectation || {}, job.salary);
+function calculateMatchScore(userSkills, userExperience, salaryExpectation, job) {
+  const skillMatch = calculateSkillMatch(userSkills, (job.skills || []).map((skill) => skill.toLowerCase()));
+  const experienceMatch = calculateExperienceMatch(userExperience, job.experienceLevel);
+  const locationMatch = calculateLocationMatch('', (job.location || '').toLowerCase());
+  const salaryMatch = calculateSalaryMatch(salaryExpectation, job.salary || {});
 
-  score = (skillMatch * 0.4) + (experienceMatch * 0.3) + (salaryMatch * 0.3);
-  
-  return Math.round(score);
+  return Math.round((skillMatch * 0.4) + (experienceMatch * 0.25) + (locationMatch * 0.2) + (salaryMatch * 0.15));
 }
 
 function calculateSkillMatch(userSkills, jobSkills) {
-  if (jobSkills.length === 0) return 50;
-  
-  const matchedSkills = userSkills.filter(skill =>
-    jobSkills.some(jSkill => jSkill.toLowerCase().includes(skill.toLowerCase()))
+  if (!jobSkills.length) return 50;
+
+  const matchedSkills = userSkills.filter((skill) =>
+    jobSkills.some((jSkill) => jSkill.includes(skill))
   ).length;
 
-  return (matchedSkills / jobSkills.length) * 100;
+  return Math.round((matchedSkills / jobSkills.length) * 100);
 }
 
-function calculateExperienceMatch(userExp, jobExp) {
-  if (userExp >= jobExp) {
-    return 100;
-  }
-  return (userExp / jobExp) * 100;
+function calculateExperienceMatch(userExperience, jobExperienceLevel) {
+  const levelMap = { Entry: 1, Mid: 3, Senior: 5 };
+  const requiredLevel = levelMap[jobExperienceLevel] || 2;
+  const normalizedUserExperience = userExperience || 0;
+  if (normalizedUserExperience >= requiredLevel) return 100;
+  return Math.round((normalizedUserExperience / requiredLevel) * 100);
+}
+
+function calculateLocationMatch(userLocation, jobLocation) {
+  if (!userLocation || !jobLocation) return 60;
+  return jobLocation.includes(userLocation) ? 100 : 60;
 }
 
 function calculateSalaryMatch(userSalary, jobSalary) {
-  const userMin = userSalary.min || 0;
-  const jobMin = jobSalary.min || 0;
-  const jobMax = jobSalary.max || Infinity;
+  const userMin = Number(userSalary?.min) || 0;
+  const jobMin = Number(jobSalary?.min) || 0;
+  const jobMax = Number(jobSalary?.max) || Infinity;
 
-  if (userMin >= jobMin && userMin <= jobMax) {
-    return 100;
-  }
-
-  if (userMin > jobMax) {
-    return Math.max(0, 100 - ((userMin - jobMax) / jobMax) * 10);
-  }
-
+  if (!userMin) return 70;
+  if (userMin >= jobMin && userMin <= jobMax) return 100;
+  if (userMin > jobMax) return Math.max(0, 100 - ((userMin - jobMax) / jobMax) * 10);
   return Math.max(0, 100 - ((jobMin - userMin) / userMin) * 10);
 }

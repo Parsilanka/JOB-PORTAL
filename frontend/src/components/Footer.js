@@ -17,10 +17,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white">Browse Jobs</a></li>
-              <li><a href="#" className="hover:text-white">Post Job</a></li>
-              <li><a href="#" className="hover:text-white">For Employers</a></li>
-              <li><a href="#" className="hover:text-white">For Job Seekers</a></li>
+              <li><a href="/jobs" className="hover:text-white">Browse Jobs</a></li>
+              <li><a href="/post-job" className="hover:text-white">Post Job</a></li>
+              <li><a href="/register" className="hover:text-white">For Employers</a></li>
+              <li><a href="/register" className="hover:text-white">For Job Seekers</a></li>
             </ul>
           </div>
 
@@ -28,10 +28,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="#" className="hover:text-white">About Us</a></li>
-              <li><a href="#" className="hover:text-white">Contact</a></li>
-              <li><a href="#" className="hover:text-white">Privacy Policy</a></li>
-              <li><a href="#" className="hover:text-white">Terms & Conditions</a></li>
+              <li><a href="/" className="hover:text-white">About Us</a></li>
+              <li><a href="/contact" className="hover:text-white">Contact</a></li>
+              <li><a href="/privacy" className="hover:text-white">Privacy Policy</a></li>
+              <li><a href="/terms" className="hover:text-white">Terms & Conditions</a></li>
             </ul>
           </div>
 
@@ -39,10 +39,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Follow Us</h4>
             <div className="space-y-2 text-gray-400">
-              <p><a href="#" className="hover:text-white">Twitter</a></p>
-              <p><a href="#" className="hover:text-white">LinkedIn</a></p>
-              <p><a href="#" className="hover:text-white">Facebook</a></p>
-              <p><a href="#" className="hover:text-white">Instagram</a></p>
+              <p><a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-white">Twitter</a></p>
+              <p><a href="https://linkedin.com" target="_blank" rel="noreferrer" className="hover:text-white">LinkedIn</a></p>
+              <p><a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-white">Facebook</a></p>
+              <p><a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-white">Instagram</a></p>
             </div>
           </div>
         </div>

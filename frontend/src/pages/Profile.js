@@ -1,15 +1,16 @@
 import React, { useState, useEffect } from 'react';
+import axios from 'axios';
 import { userService } from '../services/api';
-import { useAuth } from '../context/AuthContext';
-import { FiUser, FiMail, FiPhone, FiMapPin, FiEdit } from 'react-icons/fi';
+import { FiMail, FiPhone, FiMapPin, FiEdit, FiAward } from 'react-icons/fi';
 
 const Profile = () => {
-  const { user } = useAuth();
   const [profile, setProfile] = useState(null);
+  const [badges, setBadges] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     fetchProfile();
+    fetchBadges();
   }, []);
 
   const fetchProfile = async () => {
@@ -21,6 +22,17 @@ const Profile = () => {
       console.error('Error fetching profile:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchBadges = async () => {
+    try {
+      const response = await axios.get('/api/badges/me', {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
+      setBadges(response.data.data);
+    } catch (error) {
+      console.error('Error fetching badges:', error);
     }
   };
 
@@ -72,6 +84,24 @@ const Profile = () => {
             </div>
           </div>
         </div>
+
+        {badges && (
+          <div className="bg-white rounded-lg shadow-md p-8 mb-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">Achievements</h3>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <FiAward className="text-yellow-500" /> {badges.points} points
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {badges.badges.map((badge) => (
+                <div key={badge.key} className="rounded-full border border-yellow-400 bg-yellow-50 px-4 py-2 text-sm font-semibold text-yellow-700">
+                  {badge.title}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Bio */}
         {profile.bio && (

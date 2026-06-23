@@ -35,6 +35,12 @@ export const jobService = {
   searchJobs: (search) => API.get('/jobs', { params: { search } })
 };
 
+export const savedJobService = {
+  getSavedJobs: () => API.get('/saved-jobs'),
+  toggleSavedJob: (jobId) => API.post('/saved-jobs/toggle', { jobId }),
+  removeSavedJob: (jobId) => API.delete(`/saved-jobs/${jobId}`)
+};
+
 // ===== APPLICATION SERVICES =====
 export const applicationService = {
   applyForJob: (data) => {

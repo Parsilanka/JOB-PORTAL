@@ -19,7 +19,7 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Menu */}
-          <div className="hidden md:flex items-center space-x-6">
+          <div className="hidden md:flex items-center gap-4">
             {isAuthenticated ? (
               <>
                 <Link to="/" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Home</Link>
@@ -29,6 +29,7 @@ const Navbar = () => {
                     <Link to="/jobs" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Browse Jobs</Link>
                     <Link to="/applications" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">My Applications</Link>
                     <Link to="/recommendations" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Recommendations</Link>
+                    <Link to="/saved-jobs" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Saved Jobs</Link>
                   </>
                 )}
                 {user?.accountType === 'employer' && (
@@ -36,6 +37,9 @@ const Navbar = () => {
                     <Link to="/post-job" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Post Job</Link>
                     <Link to="/my-jobs" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">My Jobs</Link>
                     <Link to="/interviews" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Interviews</Link>
+                    <Link to="/recruiter-inbox" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Inbox</Link>
+                    <Link to="/interview-calendar" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Calendar</Link>
+                    <Link to="/hiring-pipeline" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Pipeline</Link>
                   </>
                 )}
                 {user?.accountType === 'admin' && (
@@ -91,6 +95,7 @@ const Navbar = () => {
                     <Link to="/jobs" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Browse Jobs</Link>
                     <Link to="/applications" className="block py-2 px-4 text-gray-700 dark:text-gray-300">My Applications</Link>
                     <Link to="/recommendations" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Recommendations</Link>
+                    <Link to="/saved-jobs" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Saved Jobs</Link>
                   </>
                 )}
                 {user?.accountType === 'employer' && (
@@ -98,6 +103,9 @@ const Navbar = () => {
                     <Link to="/post-job" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Post Job</Link>
                     <Link to="/my-jobs" className="block py-2 px-4 text-gray-700 dark:text-gray-300">My Jobs</Link>
                     <Link to="/interviews" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Interviews</Link>
+                    <Link to="/recruiter-inbox" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Inbox</Link>
+                    <Link to="/interview-calendar" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Calendar</Link>
+                    <Link to="/hiring-pipeline" className="block py-2 px-4 text-gray-700 dark:text-gray-300">Pipeline</Link>
                   </>
                 )}
                 {user?.accountType === 'admin' && (

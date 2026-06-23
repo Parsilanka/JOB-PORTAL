@@ -1,5 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import { Bar, Doughnut } from 'react-chartjs-2';
+import {
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  BarElement,
+  ArcElement,
+  Tooltip,
+  Legend
+} from 'chart.js';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, Tooltip, Legend);
 
 const Analytics = () => {
   const [metrics, setMetrics] = useState(null);
@@ -44,6 +56,36 @@ const Analytics = () => {
       </div>
     </div>
   );
+
+  const monthlyChartData = {
+    labels: monthlyData.map((item) => item.month),
+    datasets: [
+      {
+        label: 'Applications',
+        data: monthlyData.map((item) => item.applications || 0),
+        backgroundColor: '#2563eb'
+      },
+      {
+        label: 'Hires',
+        data: monthlyData.map((item) => item.hires || 0),
+        backgroundColor: '#16a34a'
+      }
+    ]
+  };
+
+  const employerChartData = metrics?.stats ? {
+    labels: ['Shortlisted', 'Applicants', 'Jobs Posted'],
+    datasets: [
+      {
+        data: [
+          metrics.stats.shortlistedApplications || 0,
+          metrics.stats.totalApplicationsReceived || 0,
+          metrics.stats.totalJobsPosted || 0
+        ],
+        backgroundColor: ['#8b5cf6', '#3b82f6', '#14b8a6']
+      }
+    ]
+  } : null;
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 p-8">
@@ -95,19 +137,38 @@ const Analytics = () => {
                   color="text-green-500"
                 />
                 <StatCard
+                  title="Shortlisted"
+                  value={metrics.stats.shortlistedApplications || 0}
+                  icon="🎯"
+                  color="text-purple-500"
+                />
+                <StatCard
                   title="Rating"
                   value={metrics.stats.averageRating}
                   icon="⭐"
                   color="text-yellow-500"
                 />
-                <StatCard
-                  title="Total Reviews"
-                  value={metrics.stats.totalReviews}
-                  icon="💬"
-                  color="text-purple-500"
-                />
               </>
             )}
+          </div>
+        )}
+
+        {metrics?.user?.accountType === 'employer' && employerChartData && (
+          <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_0.8fr] gap-6 mb-8">
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Hiring Activity</h2>
+              <div className="h-72">
+                <Bar data={monthlyChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+              </div>
+            </div>
+            <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+              <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Pipeline Health</h2>
+              <div className="h-72 flex items-center justify-center">
+                <div className="w-60 h-60">
+                  <Doughnut data={employerChartData} options={{ responsive: true, maintainAspectRatio: false }} />
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
@@ -116,29 +177,32 @@ const Analytics = () => {
           <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow mb-8">
             <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Performance vs Benchmark</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              {Object.entries(comparison.userStats).map(([key, value]) => {
-                const benchmarkValue = comparison.benchmarkStats[key];
-                const performance = comparison.performance[`${key}VsBenchmark`] || 0;
+              {Object.entries(comparison.userStats || {}).map(([key, value]) => {
+                const benchmarkValue = comparison.benchmarkStats?.[key];
+                const performanceValue = comparison.performance?.[`${key}VsBenchmark`];
+                const numericPerformance = Number(performanceValue) || 0;
+                const safeValue = Number(value) || 0;
+                const safeBenchmark = Number(benchmarkValue) || 0;
                 
                 return (
                   <div key={key} className="p-4 bg-gray-50 dark:bg-gray-700 rounded">
                     <p className="capitalize font-semibold text-gray-900 dark:text-white mb-2">{key}</p>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Your: {value}
+                        Your: {safeValue}
                       </span>
                       <span className="text-sm text-gray-600 dark:text-gray-400">
-                        Benchmark: {benchmarkValue}
+                        Benchmark: {safeBenchmark}
                       </span>
                     </div>
                     <div className="w-full h-2 bg-gray-300 dark:bg-gray-600 rounded">
                       <div
                         className={`h-full rounded ${performance >= 100 ? 'bg-green-500' : 'bg-yellow-500'}`}
-                        style={{ width: `${Math.min(performance, 100)}%` }}
+                        style={{ width: `${Math.min(numericPerformance, 100)}%` }}
                       />
                     </div>
-                    <p className={`text-xs mt-2 ${performance >= 100 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
-                      {performance.toFixed(0)}% of benchmark
+                    <p className={`text-xs mt-2 ${numericPerformance >= 100 ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`}>
+                      {numericPerformance.toFixed(0)}% of benchmark
                     </p>
                   </div>
                 );

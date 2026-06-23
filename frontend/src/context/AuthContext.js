@@ -23,9 +23,13 @@ export const AuthProvider = ({ children }) => {
       if (token) {
         try {
           const response = await authService.getMe();
+          if (response.data.data?._id) {
+            localStorage.setItem('userId', response.data.data._id);
+          }
           setUser(response.data.data);
         } catch (err) {
           localStorage.removeItem('token');
+          localStorage.removeItem('userId');
           setToken(null);
           setUser(null);
         }
@@ -72,6 +76,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('token');
+    localStorage.removeItem('userId');
     setToken(null);
     setUser(null);
     setError(null);

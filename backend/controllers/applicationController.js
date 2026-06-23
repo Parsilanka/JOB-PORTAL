@@ -2,6 +2,7 @@ const nodemailer = require('nodemailer');
 const Application = require('../models/Application');
 const Job = require('../models/Job');
 const User = require('../models/User');
+const Notification = require('../models/Notification');
 
 const createTransporter = () => {
   return nodemailer.createTransport({
@@ -63,6 +64,20 @@ const sendInterviewNotification = async (application) => {
   }
 };
 
+const createApplicationNotification = async (userId, application, title, description, type = 'application_update') => {
+  await Notification.create({
+    user: userId,
+    type,
+    title,
+    description,
+    data: {
+      relatedApplication: application._id,
+      relatedJob: application.job
+    },
+    actionUrl: '/applications'
+  });
+};
+
 // @desc    Apply for a job
 // @route   POST /api/applications
 // @access  Private (Job Seeker only)
@@ -119,11 +134,28 @@ exports.applyForJob = async (req, res, next) => {
       coverLetter: coverLetter || ''
     });
 
-    // Update job applicants count
     await Job.findByIdAndUpdate(jobId, {
       $inc: { applicationCount: 1 },
       $push: { applicants: application._id }
     });
+
+    await createApplicationNotification(
+      req.user._id,
+      application,
+      'Application received',
+      `Your application for ${job.title} is being reviewed.`,
+      'application_update'
+    );
+
+    if (job.employer) {
+      await createApplicationNotification(
+        job.employer,
+        application,
+        'New applicant received',
+        `A new candidate applied for ${job.title}.`,
+        'application_update'
+      );
+    }
 
     res.status(201).json({
       success: true,
@@ -329,6 +361,24 @@ exports.updateApplicationStatus = async (req, res, next) => {
 
     if (status === 'shortlisted') {
       await sendInterviewNotification(application);
+    }
+
+    if (status) {
+      const statusTitle = status === 'shortlisted'
+        ? 'Application shortlisted'
+        : status === 'accepted'
+          ? 'Application accepted'
+          : status === 'rejected'
+            ? 'Application rejected'
+            : 'Application status updated';
+
+      await createApplicationNotification(
+        application.applicant,
+        application,
+        statusTitle,
+        `Your application for ${application.job.title} has been marked as ${status}.`,
+        'application_update'
+      );
     }
 
     res.status(200).json({

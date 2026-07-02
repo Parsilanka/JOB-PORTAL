@@ -38,6 +38,7 @@ import SavedJobs from './pages/SavedJobs';
 import HiringPipeline from './pages/HiringPipeline';
 import RecruiterInbox from './pages/RecruiterInbox';
 import InterviewCalendar from './pages/InterviewCalendar';
+import Contact from './pages/Contact';
 
 function App() {
   return (
@@ -209,6 +210,7 @@ function App() {
 
               {/* Public Subscription Routes */}
               <Route path="/subscriptions" element={<SubscriptionPlans />} />
+              <Route path="/contact" element={<Contact />} />
 
               {/* New Features Routes */}
               <Route

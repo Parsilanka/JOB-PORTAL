@@ -13,7 +13,7 @@ const ApplicationPayment = () => {
   const [pollingCount, setPollingCount] = useState(0);
   const navigate = useNavigate();
 
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
   const APPLICATION_FEE = 50;
   const MAX_POLLING_ATTEMPTS = 30; // Poll for 3 minutes (30 * 6 seconds)
 

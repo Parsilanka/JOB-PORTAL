@@ -13,7 +13,7 @@ const JobPostingPayment = () => {
   const [paymentId, setPaymentId] = useState('');
   const [pollingCount, setPollingCount] = useState(0);
 
-  const API_URL = 'http://localhost:5000/api';
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5000/api';
   const JOB_POSTING_FEE = 100;
   const MAX_POLLING_ATTEMPTS = 30;
 

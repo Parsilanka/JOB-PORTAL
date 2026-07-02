@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
@@ -17,10 +18,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="/jobs" className="hover:text-white">Browse Jobs</a></li>
-              <li><a href="/post-job" className="hover:text-white">Post Job</a></li>
-              <li><a href="/register" className="hover:text-white">For Employers</a></li>
-              <li><a href="/register" className="hover:text-white">For Job Seekers</a></li>
+              <li><Link to="/jobs" className="hover:text-white">Browse Jobs</Link></li>
+              <li><Link to="/post-job" className="hover:text-white">Post Job</Link></li>
+              <li><Link to="/post-job" className="hover:text-white">For Employers</Link></li>
+              <li><Link to="/jobs" className="hover:text-white">For Job Seekers</Link></li>
             </ul>
           </div>
 
@@ -28,10 +29,10 @@ const Footer = () => {
           <div>
             <h4 className="text-lg font-semibold mb-4">Company</h4>
             <ul className="space-y-2 text-gray-400">
-              <li><a href="/" className="hover:text-white">About Us</a></li>
-              <li><a href="/contact" className="hover:text-white">Contact</a></li>
-              <li><a href="/privacy" className="hover:text-white">Privacy Policy</a></li>
-              <li><a href="/terms" className="hover:text-white">Terms & Conditions</a></li>
+              <li><Link to="/" className="hover:text-white">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-white">Contact</Link></li>
+              <li><Link to="/profile" className="hover:text-white">Privacy Policy</Link></li>
+              <li><Link to="/subscriptions" className="hover:text-white">Terms & Conditions</Link></li>
             </ul>
           </div>
 

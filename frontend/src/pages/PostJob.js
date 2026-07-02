@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { jobService } from '../services/api';
 import { FiChevronLeft } from 'react-icons/fi';
 
 const PostJob = () => {

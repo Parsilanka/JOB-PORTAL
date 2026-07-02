@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { jobService } from '../services/api';
 import JobCard from '../components/JobCard';
-import { useNavigate } from 'react-router-dom';
 
 const Jobs = () => {
   const [jobs, setJobs] = useState([]);
@@ -13,13 +12,7 @@ const Jobs = () => {
     jobType: '',
     page: 1
   });
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    fetchJobs();
-  }, [filters]);
-
-  const fetchJobs = async () => {
+  const fetchJobs = useCallback(async () => {
     try {
       setLoading(true);
       const response = await jobService.getAllJobs({
@@ -36,7 +29,11 @@ const Jobs = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filters]);
+
+  useEffect(() => {
+    fetchJobs();
+  }, [fetchJobs]);
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;

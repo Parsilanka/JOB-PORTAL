@@ -24,7 +24,7 @@ const JobPostingPayment = () => {
     if (!jobData) {
       navigate('/post-job');
     }
-  }, []);
+  }, [jobData, navigate]);
 
   // Poll for payment status
   useEffect(() => {
@@ -73,7 +73,7 @@ const JobPostingPayment = () => {
     }, 6000);
 
     return () => clearInterval(pollInterval);
-  }, [paymentStatus, paymentId, pollingCount, jobData, navigate]);
+  }, [paymentStatus, paymentId, pollingCount, jobData, navigate, API_URL]);
 
   const formatPhoneNumber = (phone) => {
     let cleaned = phone.replace(/\D/g, '');

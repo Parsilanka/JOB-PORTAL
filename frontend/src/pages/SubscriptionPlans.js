@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { FiCheck, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
@@ -23,7 +23,7 @@ const SubscriptionPlans = () => {
     if (user?.accountType === 'employer') {
       checkCurrentSubscription();
     }
-  }, [user?.accountType]);
+  }, [user?.accountType, fetchPlans, checkCurrentSubscription]);
 
   // Poll for payment status
   useEffect(() => {
@@ -64,7 +64,7 @@ const SubscriptionPlans = () => {
     }, 6000); // Poll every 6 seconds
 
     return () => clearInterval(pollInterval);
-  }, [paymentStatus, paymentId, pollingCount]);
+  }, [paymentStatus, paymentId, pollingCount, API_URL, checkCurrentSubscription]);
 
   const formatPhoneNumber = (phone) => {
     let cleaned = phone.replace(/\D/g, '');
@@ -77,7 +77,7 @@ const SubscriptionPlans = () => {
     return cleaned;
   };
 
-  const fetchPlans = async () => {
+  const fetchPlans = useCallback(async () => {
     try {
       const response = await axios.get(`${API_URL}/subscriptions/plans`);
       setPlans(response.data.data);
@@ -86,9 +86,9 @@ const SubscriptionPlans = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [API_URL]);
 
-  const checkCurrentSubscription = async () => {
+  const checkCurrentSubscription = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${API_URL}/subscriptions/my`, {
@@ -98,7 +98,7 @@ const SubscriptionPlans = () => {
     } catch (err) {
       // No active subscription
     }
-  };
+  }, [API_URL]);
 
   const initiatePayment = async (plan) => {
     if (!phoneNumber) {
